@@ -986,15 +986,15 @@
                 products = [
                     // Nam
                     ...[2,3,4,5,6,7,8,10].map(size => ({
-                        id: size, name: `ĐP Nam Size ${size}`, type: "nam", size, price: 90000, stock: 0, imported: 0, sold: 0
+                        id: size, name: `ĐP Nam ${size}`, type: "nam", size, price: 90000, stock: 0, imported: 0, sold: 0
                     })),
                     // Nữ
                     ...[2,3,4,5,6,7,8,10].map(size => ({
-                        id: 100+size, name: `ĐP Nữ Size ${size}`, type: "nu", size, price: 90000, stock: 0, imported: 0, sold: 0
+                        id: 100+size, name: `ĐP Nữ ${size}`, type: "nu", size, price: 90000, stock: 0, imported: 0, sold: 0
                     })),
                     // Thể dục
                     ...[2,3,4,5,6,7,8,10].map(size => ({
-                        id: 200+size, name: `Thể dục Size ${size}`, type: "the_duc", size, price: 55000, stock: 0, imported: 0, sold: 0
+                        id: 200+size, name: `Thể dục ${size}`, type: "the_duc", size, price: 55000, stock: 0, imported: 0, sold: 0
                     })),
                 ];
                 salesHistory = [];
@@ -1200,7 +1200,7 @@
                     const nu = products.find(p => p.type==='nu' && p.size===size);
                     const td = products.find(p => p.type==='the_duc' && p.size===size);
                     row.innerHTML = `
-                        <td><strong>Size ${size}</strong></td>
+                        <td><strong>${size}</strong></td>
                         <td><input type="number" class="price-input" value="${nam.price}" data-product="${nam.id}"></td>
                         <td><input type="number" class="price-input" value="${nu.price}" data-product="${nu.id}"></td>
                         <td><input type="number" class="price-input" value="${td.price}" data-product="${td.id}"></td>
@@ -1396,11 +1396,16 @@
 
             // --- DASHBOARD ---
             function updateDashboardTotals() {
-                // Tính tổng giá trị tồn kho đúng theo từng sản phẩm
-                const totalInventoryValue = products.reduce((sum, p) => sum + (p.stock * p.price), 0);
+                // Tính tổng tồn kho theo đúng giá
+                const totalUniform = products.filter(p => p.type === 'nam' || p.type === 'nu')
+                                            .reduce((sum, p) => sum + p.stock, 0);
+                const totalPE = products.filter(p => p.type === 'the_duc')
+                                        .reduce((sum, p) => sum + p.stock, 0);
+                const totalInventoryValue = (totalUniform * 90000) + (totalPE * 55000);
+
                 // Tính tổng giá trị bán
                 const totalSalesValue = salesHistory.reduce((sum, sale) => sum + sale.totalAmount, 0);
-            
+
                 document.getElementById('total-inventory-value').textContent = totalInventoryValue.toLocaleString() + '₫';
                 document.getElementById('total-sales-value').textContent = totalSalesValue.toLocaleString() + '₫';
             }
