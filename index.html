@@ -1396,16 +1396,11 @@
 
             // --- DASHBOARD ---
             function updateDashboardTotals() {
-                // Tính tổng tồn kho theo đúng giá
-                const totalUniform = products.filter(p => p.type === 'nam' || p.type === 'nu')
-                                            .reduce((sum, p) => sum + p.stock, 0);
-                const totalPE = products.filter(p => p.type === 'the_duc')
-                                        .reduce((sum, p) => sum + p.stock, 0);
-                const totalInventoryValue = (totalUniform * 90000) + (totalPE * 55000);
-
+                // Tính tổng giá trị tồn kho đúng theo từng sản phẩm
+                const totalInventoryValue = products.reduce((sum, p) => sum + (p.stock * p.price), 0);
                 // Tính tổng giá trị bán
                 const totalSalesValue = salesHistory.reduce((sum, sale) => sum + sale.totalAmount, 0);
-
+            
                 document.getElementById('total-inventory-value').textContent = totalInventoryValue.toLocaleString() + '₫';
                 document.getElementById('total-sales-value').textContent = totalSalesValue.toLocaleString() + '₫';
             }
