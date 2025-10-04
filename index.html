@@ -20,7 +20,6 @@
             min-height: 100vh;
         }
 
-        /* Header và Navigation */
         .app-header {
             background: #2c3e50;
             color: white;
@@ -66,7 +65,6 @@
             background: #1abc9c;
         }
 
-        /* Dashboard Header */
         .dashboard-header {
             display: flex;
             gap: 15px;
@@ -97,7 +95,6 @@
             color: #222;
         }
 
-        /* Main Content */
         .main-content {
             max-width: 1400px;
             margin: 0 auto;
@@ -124,7 +121,6 @@
             padding-bottom: 5px;
         }
 
-        /* Menu Bán Hàng */
         .container {
             display: flex;
             gap: 15px;
@@ -220,7 +216,6 @@
             padding-top: 10px;
         }
 
-        /* Menu Giá Bán */
         .price-management {
             display: flex;
             gap: 20px;
@@ -267,7 +262,6 @@
             font-size: 13px;
         }
 
-        /* Menu Nhập Hàng & Tồn Kho */
         .import-form, .inventory-table {
             margin-bottom: 20px;
         }
@@ -326,7 +320,6 @@
             color: #2c3e50;
         }
 
-        /* Modal - ĐÃ CẢI THIỆN */
         .modal {
             display: none;
             position: fixed;
@@ -475,7 +468,6 @@
             color: white;
         }
 
-        /* Tổng quan */
         .overview-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -501,7 +493,6 @@
             color: #1abc9c;
         }
 
-        /* === RESPONSIVE DESIGN === */
         @media (max-width: 1024px) {
             .products-grid, .import-grid {
                 grid-template-columns: repeat(4, 1fr);
@@ -629,7 +620,6 @@
             }
         }
 
-        /* Nút xóa tất cả */
         .delete-all-btn {
             background: #e74c3c;
             color: white;
@@ -660,7 +650,6 @@
             flex: 1;
         }
 
-        /* Thông báo */
         .notification {
             position: fixed;
             top: 20px;
@@ -887,590 +876,588 @@
         </div>
     </div>
 
-            <script>
-            // --- CẤU HÌNH FIREBASE ---
-            const firebaseConfig = {
-                apiKey: "AIzaSyDdW_GqpCpOLdwKWOKwPhdyMCtrW3Ynqek",
-                authDomain: "uniform-management-dfa0e.firebaseapp.com",
-                projectId: "uniform-management-dfa0e",
-                storageBucket: "uniform-management-dfa0e.firebasestorage.app",
-                messagingSenderId: "519882415963",
-                appId: "1:519882415963:web:adda312cacf3151bc7047e"
-            };
+<script>
+    // --- CẤU HÌNH FIREBASE ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyDdW_GqpCpOLdwKWOKwPhdyMCtrW3Ynqek",
+        authDomain: "uniform-management-dfa0e.firebaseapp.com",
+        projectId: "uniform-management-dfa0e",
+        storageBucket: "uniform-management-dfa0e.firebasestorage.app",
+        messagingSenderId: "519882415963",
+        appId: "1:519882415963:web:adda312cacf3151bc7047e"
+    };
 
-            let db;
+    let db;
 
-            function loadFirebase() {
-                return new Promise((resolve, reject) => {
-                    if (typeof firebase === 'undefined') {
-                        const script = document.createElement('script');
-                        script.src = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js';
-                        script.onload = () => {
-                            const script2 = document.createElement('script');
-                            script2.src = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js';
-                            script2.onload = () => {
-                                firebase.initializeApp(firebaseConfig);
-                                db = firebase.firestore();
-                                resolve();
-                            };
-                            script2.onerror = reject;
-                            document.head.appendChild(script2);
-                        };
-                        script.onerror = reject;
-                        document.head.appendChild(script);
-                    } else {
+    function loadFirebase() {
+        return new Promise((resolve, reject) => {
+            if (typeof firebase === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js';
+                script.onload = () => {
+                    const script2 = document.createElement('script');
+                    script2.src = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js';
+                    script2.onload = () => {
                         firebase.initializeApp(firebaseConfig);
                         db = firebase.firestore();
                         resolve();
-                    }
-                });
-            }
-
-            // --- DỮ LIỆU ỨNG DỤNG ---
-            let products = [];
-            let cart = [];
-            let salesHistory = [];
-            let importHistory = [];
-            let priceHistory = [];
-            let currentProduct = null;
-
-            document.addEventListener('DOMContentLoaded', function() {
-                loadFirebase().then(() => {
-                    loadDataFromFirebase();
-                }).catch(error => {
-                    console.error('Lỗi tải Firebase:', error);
-                    showNotification('Lỗi kết nối Firebase', 'error');
-                });
-            });
-
-            // --- FIREBASE ---
-            async function loadDataFromFirebase() {
-                try {
-                    showNotification('Đang tải dữ liệu từ Firebase...', 'info');
-                    const docRef = db.collection("uniformData").doc("main");
-                    const docSnap = await docRef.get();
-                    if (docSnap.exists) {
-                        const data = docSnap.data();
-                        products = data.products || [];
-                        salesHistory = data.salesHistory || [];
-                        importHistory = data.importHistory || [];
-                        priceHistory = data.priceHistory || [];
-                    } else {
-                        await initSampleData();
-                        return;
-                    }
-                    updateDashboardTotals();
-                    updateOverview();
-                    showMenu('tong-quan');
-                    showNotification('Tải dữ liệu thành công!', 'success');
-                } catch (error) {
-                    console.error('Lỗi khi tải dữ liệu:', error);
-                    showNotification('Lỗi khi tải dữ liệu: ' + error.message, 'error');
-                }
-            }
-
-            async function saveDataToFirebase() {
-                try {
-                    await db.collection("uniformData").doc("main").set({
-                        products, salesHistory, importHistory, priceHistory,
-                        lastUpdated: new Date().toISOString()
-                    });
-                    return true;
-                } catch (error) {
-                    showNotification('Lỗi khi lưu dữ liệu: ' + error.message, 'error');
-                    return false;
-                }
-            }
-
-            // --- KHỞI TẠO DỮ LIỆU MẪU ---
-            async function initSampleData() {
-                products = [
-                    // Nam
-                    ...[2,3,4,5,6,7,8,10].map(size => ({
-                        id: size, name: `ĐP Nam ${size}`, type: "nam", size, price: 90000, stock: 0, imported: 0, sold: 0
-                    })),
-                    // Nữ
-                    ...[2,3,4,5,6,7,8,10].map(size => ({
-                        id: 100+size, name: `ĐP Nữ ${size}`, type: "nu", size, price: 90000, stock: 0, imported: 0, sold: 0
-                    })),
-                    // Thể dục
-                    ...[2,3,4,5,6,7,8,10].map(size => ({
-                        id: 200+size, name: `Thể dục ${size}`, type: "the_duc", size, price: 55000, stock: 0, imported: 0, sold: 0
-                    })),
-                ];
-                salesHistory = [];
-                importHistory = [];
-                priceHistory = [];
-                await saveDataToFirebase();
-                showNotification('Đã khởi tạo dữ liệu mẫu thành công!', 'success');
-                updateDashboardTotals();
-                updateOverview();
-                showMenu('tong-quan');
-            }
-
-            // --- HIỂN THỊ MENU ---
-            function showMenu(menuId) {
-                document.querySelectorAll('.menu-section').forEach(x => x.classList.remove('active'));
-                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-                document.getElementById(menuId).classList.add('active');
-                document.querySelectorAll('.nav-btn').forEach(btn => {
-                    if (btn.textContent.trim() === getButtonText(menuId)) btn.classList.add('active');
-                });
-                switch(menuId) {
-                    case 'tong-quan': updateOverview(); break;
-                    case 'gia-ban': initPriceManagement(); break;
-                    case 'nhap-hang': initImportForm(); break;
-                    case 'ban-hang': initProductsGrid(); break;
-                    case 'ton-kho': initInventoryTable(); break;
-                    case 'lich-su-nhap': initImportHistory(); break;
-                    case 'lich-su-ban': initSalesHistory(); break;
-                }
-            }
-
-            function getButtonText(menuId) {
-                return ({
-                    'tong-quan': 'Tổng Quan', 'gia-ban': 'Giá Bán', 'nhap-hang': 'Nhập Hàng',
-                    'ban-hang': 'Bán Hàng', 'ton-kho': 'Tồn Kho', 'lich-su-nhap': 'Lịch Sử Nhập', 'lich-su-ban': 'Lịch Sử Bán'
-                })[menuId];
-            }
-
-            // --- TỔNG QUAN ---
-            function updateOverview() {
-                const totalProducts = products.reduce((sum, p) => sum + p.stock, 0);
-                const totalValue = products.reduce((sum, p) => sum + (p.stock * p.price), 0);
-                const totalSales = salesHistory.reduce((sum, sale) => sum + sale.totalAmount, 0);
-                const totalImports = importHistory.reduce((sum, imp) => sum + imp.total, 0);
-                document.getElementById('total-products').textContent = totalProducts + ' sản phẩm';
-                document.getElementById('total-inventory').textContent = totalValue.toLocaleString() + '₫';
-                document.getElementById('total-sales').textContent = totalSales.toLocaleString() + '₫';
-                document.getElementById('total-imports').textContent = totalImports + ' sản phẩm';
-            }
-
-            // --- MENU BÁN HÀNG ---
-            function initProductsGrid() {
-                const grid = document.getElementById('products-grid');
-                grid.innerHTML = '';
-                products.forEach(product => {
-                    const div = document.createElement('div');
-                    div.className = `product-item product-${product.type}`;
-                    div.innerHTML = `<div>${product.name}</div><div class="product-stock">Tồn: ${product.stock}</div>`;
-                    div.onclick = () => openSaleModal(product);
-                    grid.appendChild(div);
-                });
-                updateCartDisplay();
-            }
-
-            function openSaleModal(product) {
-                currentProduct = product;
-                document.getElementById('modal-product-name').textContent = product.name;
-                document.getElementById('modal-current-stock').textContent = product.stock;
-                document.getElementById('sale-quantity').value = '';
-                document.getElementById('sale-note').value = '';
-                document.getElementById('stock-error').style.display = 'none';
-                document.getElementById('sale-modal').style.display = 'block';
-                setTimeout(() => document.getElementById('sale-quantity').focus(), 100);
-            }
-
-            function closeModal() {
-                document.getElementById('sale-modal').style.display = 'none';
-                currentProduct = null;
-            }
-
-            function addToCart() {
-                const quantity = parseInt(document.getElementById('sale-quantity').value);
-                const note = document.getElementById('sale-note').value;
-                if (!quantity || quantity <= 0) {
-                    showNotification('Vui lòng nhập số lượng hợp lệ', 'error');
-                    return;
-                }
-                if (quantity > currentProduct.stock) {
-                    document.getElementById('stock-error').textContent = 'Số lượng vượt quá tồn kho';
-                    document.getElementById('stock-error').style.display = 'block';
-                    return;
-                }
-                const idx = cart.findIndex(item => item.productId === currentProduct.id && item.note === note);
-                if (idx !== -1) {
-                    cart[idx].quantity += quantity;
-                    cart[idx].total = cart[idx].quantity * currentProduct.price;
-                } else {
-                    cart.push({
-                        productId: currentProduct.id,
-                        productName: currentProduct.name,
-                        quantity,
-                        price: currentProduct.price,
-                        note,
-                        total: quantity * currentProduct.price
-                    });
-                }
-                updateCartDisplay();
-                closeModal();
-                showNotification('Đã thêm vào giỏ hàng!');
-            }
-
-            function updateCartDisplay() {
-                const cartItems = document.getElementById('cart-items');
-                const cartCount = document.getElementById('cart-count');
-                const cartTotal = document.getElementById('cart-total-amount');
-                const confirmBtn = document.getElementById('confirm-sale-btn');
-                cartItems.innerHTML = '';
-                if (cart.length === 0) {
-                    cartItems.innerHTML = '<div style="text-align: center; color: #999; padding: 20px 0;">Giỏ hàng trống</div>';
-                    confirmBtn.disabled = true;
-                } else {
-                    let totalAmount = 0;
-                    cart.forEach((item, i) => {
-                        totalAmount += item.total;
-                        const div = document.createElement('div');
-                        div.className = 'cart-item';
-                        div.innerHTML = `
-                            <div>
-                                <div><strong>${item.productName}</strong></div>
-                                <div>${item.quantity} × ${item.price.toLocaleString()}₫</div>
-                                ${item.note ? `<div><small>${item.note}</small></div>` : ''}
-                            </div>
-                            <div>
-                                <strong>${item.total.toLocaleString()}₫</strong>
-                                <button onclick="removeFromCart(${i})" style="background:none;border:none;color:red;cursor:pointer;margin-left:10px;">×</button>
-                            </div>
-                        `;
-                        cartItems.appendChild(div);
-                    });
-                    confirmBtn.disabled = false;
-                    cartTotal.textContent = totalAmount.toLocaleString();
-                }
-                cartCount.textContent = cart.length;
-            }
-
-            function removeFromCart(index) {
-                cart.splice(index, 1);
-                updateCartDisplay();
-                showNotification('Đã xóa sản phẩm khỏi giỏ hàng');
-            }
-
-            function clearCart() {
-                if (cart.length === 0) {
-                    showNotification('Giỏ hàng trống!', 'error');
-                    return;
-                }
-                cart = [];
-                updateCartDisplay();
-                showNotification('Đã xóa toàn bộ giỏ hàng');
-            }
-
-            async function confirmSale() {
-                if (cart.length === 0) {
-                    showNotification('Giỏ hàng trống!', 'error');
-                    return;
-                }
-                const totalAmount = cart.reduce((sum, item) => sum + item.total, 0);
-                showNotification(`Đang xử lý bán ${cart.length} sản phẩm...`, 'info');
-                const sale = {
-                    id: Date.now(),
-                    timestamp: new Date().toLocaleString('vi-VN'),
-                    items: [...cart],
-                    totalAmount
+                    };
+                    script2.onerror = reject;
+                    document.head.appendChild(script2);
                 };
-                salesHistory.push(sale);
-                cart.forEach(item => {
-                    const product = products.find(p => p.id === item.productId);
-                    if (product) {
-                        product.stock -= item.quantity;
-                        product.sold += item.quantity;
-                    }
-                });
-                cart = [];
-                updateCartDisplay();
-                const success = await saveDataToFirebase();
-                if (success) {
-                    updateDashboardTotals();
-                    updateOverview();
-                    updateProductGridStock();
-                    showNotification(`✅ Bán hàng thành công! Tổng: ${totalAmount.toLocaleString()}₫`, 'success');
-                    setTimeout(() => showMenu('lich-su-ban'), 1000);
-                }
+                script.onerror = reject;
+                document.head.appendChild(script);
+            } else {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                resolve();
             }
+        });
+    }
 
-            // --- GIÁ BÁN ---
-            function initPriceManagement() {
-                const tableBody = document.querySelector('#price-table tbody');
-                tableBody.innerHTML = '';
-                const sizes = [2,3,4,5,6,7,8,10];
-                sizes.forEach(size => {
-                    const row = document.createElement('tr');
-                    const nam = products.find(p => p.type==='nam' && p.size===size);
-                    const nu = products.find(p => p.type==='nu' && p.size===size);
-                    const td = products.find(p => p.type==='the_duc' && p.size===size);
-                    row.innerHTML = `
-                        <td><strong>${size}</strong></td>
-                        <td><input type="number" class="price-input" value="${nam.price}" data-product="${nam.id}"></td>
-                        <td><input type="number" class="price-input" value="${nu.price}" data-product="${nu.id}"></td>
-                        <td><input type="number" class="price-input" value="${td.price}" data-product="${td.id}"></td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-                updatePriceHistory();
+    // --- DỮ LIỆU ỨNG DỤNG ---
+    let products = [];
+    let cart = [];
+    let salesHistory = [];
+    let importHistory = [];
+    let priceHistory = [];
+    let currentProduct = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadFirebase().then(() => {
+            loadDataFromFirebase();
+        }).catch(error => {
+            console.error('Lỗi tải Firebase:', error);
+            showNotification('Lỗi kết nối Firebase', 'error');
+        });
+    });
+
+    // --- FIREBASE ---
+    async function loadDataFromFirebase() {
+        try {
+            showNotification('Đang tải dữ liệu từ Firebase...', 'info');
+            const docRef = db.collection("uniformData").doc("main");
+            const docSnap = await docRef.get();
+            if (docSnap.exists) {
+                const data = docSnap.data();
+                products = data.products || [];
+                salesHistory = data.salesHistory || [];
+                importHistory = data.importHistory || [];
+                priceHistory = data.priceHistory || [];
+            } else {
+                await initSampleData();
+                return;
             }
+            updateDashboardTotals();
+            updateOverview();
+            showMenu('tong-quan');
+            showNotification('Tải dữ liệu thành công!', 'success');
+        } catch (error) {
+            console.error('Lỗi khi tải dữ liệu:', error);
+            showNotification('Lỗi khi tải dữ liệu: ' + error.message, 'error');
+        }
+    }
 
-            async function saveAllPrices() {
-                const inputs = document.querySelectorAll('.price-input');
-                let hasChange = false;
-                inputs.forEach(input => {
-                    const productId = parseInt(input.dataset.product);
-                    const newPrice = parseInt(input.value);
-                    const product = products.find(p => p.id === productId);
-                    if (product && newPrice !== product.price) {
-                        priceHistory.push({
-                            product: product.name,
-                            oldPrice: product.price,
-                            newPrice,
-                            timestamp: new Date().toLocaleString('vi-VN')
-                        });
-                        product.price = newPrice;
-                        hasChange = true;
-                    }
-                });
-                if (hasChange) {
-                    await saveDataToFirebase();
-                    showNotification('Đã cập nhật giá thành công!');
-                    updatePriceHistory();
-                    updateDashboardTotals();
-                    updateOverview();
-                } else {
-                    showNotification('Không có thay đổi nào để lưu!', 'info');
-                }
+    async function saveDataToFirebase() {
+        try {
+            await db.collection("uniformData").doc("main").set({
+                products, salesHistory, importHistory, priceHistory,
+                lastUpdated: new Date().toISOString()
+            });
+            return true;
+        } catch (error) {
+            showNotification('Lỗi khi lưu dữ liệu: ' + error.message, 'error');
+            return false;
+        }
+    }
+
+    // --- KHỞI TẠO DỮ LIỆU MẪU ---
+    async function initSampleData() {
+        products = [
+            // Nam
+            ...[2,3,4,5,6,7,8,10].map(size => ({
+                id: size, name: `ĐP Nam ${size}`, type: "nam", size, price: 90000, stock: 0, imported: 0, sold: 0
+            })),
+            // Nữ
+            ...[2,3,4,5,6,7,8,10].map(size => ({
+                id: 100+size, name: `ĐP Nữ ${size}`, type: "nu", size, price: 90000, stock: 0, imported: 0, sold: 0
+            })),
+            // Thể dục
+            ...[2,3,4,5,6,7,8,10].map(size => ({
+                id: 200+size, name: `Thể dục ${size}`, type: "the_duc", size, price: 55000, stock: 0, imported: 0, sold: 0
+            })),
+        ];
+        salesHistory = [];
+        importHistory = [];
+        priceHistory = [];
+        await saveDataToFirebase();
+        showNotification('Đã khởi tạo dữ liệu mẫu thành công!', 'success');
+        updateDashboardTotals();
+        updateOverview();
+        showMenu('tong-quan');
+    }
+
+    // --- HIỂN THỊ MENU ---
+    function showMenu(menuId) {
+        document.querySelectorAll('.menu-section').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(menuId).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            if (btn.textContent.trim() === getButtonText(menuId)) btn.classList.add('active');
+        });
+        switch(menuId) {
+            case 'tong-quan': updateOverview(); break;
+            case 'gia-ban': initPriceManagement(); break;
+            case 'nhap-hang': initImportForm(); break;
+            case 'ban-hang': initProductsGrid(); break;
+            case 'ton-kho': initInventoryTable(); break;
+            case 'lich-su-nhap': initImportHistory(); break;
+            case 'lich-su-ban': initSalesHistory(); break;
+        }
+    }
+
+    function getButtonText(menuId) {
+        return ({
+            'tong-quan': 'Tổng Quan', 'gia-ban': 'Giá Bán', 'nhap-hang': 'Nhập Hàng',
+            'ban-hang': 'Bán Hàng', 'ton-kho': 'Tồn Kho', 'lich-su-nhap': 'Lịch Sử Nhập', 'lich-su-ban': 'Lịch Sử Bán'
+        })[menuId];
+    }
+
+    // --- TỔNG QUAN ---
+    function updateOverview() {
+        const totalProducts = products.reduce((sum, p) => sum + p.stock, 0);
+        const totalValue = products.reduce((sum, p) => sum + (p.stock * p.price), 0);
+        const totalSales = salesHistory.reduce((sum, sale) => sum + sale.totalAmount, 0);
+        const totalImports = importHistory.reduce((sum, imp) => sum + imp.total, 0);
+        document.getElementById('total-products').textContent = totalProducts + ' sản phẩm';
+        document.getElementById('total-inventory').textContent = totalValue.toLocaleString() + '₫';
+        document.getElementById('total-sales').textContent = totalSales.toLocaleString() + '₫';
+        document.getElementById('total-imports').textContent = totalImports + ' sản phẩm';
+    }
+
+    // --- MENU BÁN HÀNG ---
+    function initProductsGrid() {
+        const grid = document.getElementById('products-grid');
+        grid.innerHTML = '';
+        products.forEach(product => {
+            const div = document.createElement('div');
+            div.className = `product-item product-${product.type}`;
+            div.innerHTML = `<div>${product.name}</div><div class="product-stock">Tồn: ${product.stock}</div>`;
+            div.onclick = () => openSaleModal(product);
+            grid.appendChild(div);
+        });
+        updateCartDisplay();
+    }
+
+    function openSaleModal(product) {
+        currentProduct = product;
+        document.getElementById('modal-product-name').textContent = product.name;
+        document.getElementById('modal-current-stock').textContent = product.stock;
+        document.getElementById('sale-quantity').value = '';
+        document.getElementById('sale-note').value = '';
+        document.getElementById('stock-error').style.display = 'none';
+        document.getElementById('sale-modal').style.display = 'block';
+        setTimeout(() => document.getElementById('sale-quantity').focus(), 100);
+    }
+
+    function closeModal() {
+        document.getElementById('sale-modal').style.display = 'none';
+        currentProduct = null;
+    }
+
+    function addToCart() {
+        const quantity = parseInt(document.getElementById('sale-quantity').value);
+        const note = document.getElementById('sale-note').value;
+        if (!quantity || quantity <= 0) {
+            showNotification('Vui lòng nhập số lượng hợp lệ', 'error');
+            return;
+        }
+        if (quantity > currentProduct.stock) {
+            document.getElementById('stock-error').textContent = 'Số lượng vượt quá tồn kho';
+            document.getElementById('stock-error').style.display = 'block';
+            return;
+        }
+        const idx = cart.findIndex(item => item.productId === currentProduct.id && item.note === note);
+        if (idx !== -1) {
+            cart[idx].quantity += quantity;
+            cart[idx].total = cart[idx].quantity * currentProduct.price;
+        } else {
+            cart.push({
+                productId: currentProduct.id,
+                productName: currentProduct.name,
+                quantity,
+                price: currentProduct.price,
+                note,
+                total: quantity * currentProduct.price
+            });
+        }
+        updateCartDisplay();
+        closeModal();
+        showNotification('Đã thêm vào giỏ hàng!');
+    }
+
+    function updateCartDisplay() {
+        const cartItems = document.getElementById('cart-items');
+        const cartCount = document.getElementById('cart-count');
+        const cartTotal = document.getElementById('cart-total-amount');
+        const confirmBtn = document.getElementById('confirm-sale-btn');
+        cartItems.innerHTML = '';
+        if (cart.length === 0) {
+            cartItems.innerHTML = '<div style="text-align: center; color: #999; padding: 20px 0;">Giỏ hàng trống</div>';
+            confirmBtn.disabled = true;
+        } else {
+            let totalAmount = 0;
+            cart.forEach((item, i) => {
+                totalAmount += item.total;
+                const div = document.createElement('div');
+                div.className = 'cart-item';
+                div.innerHTML = `
+                    <div>
+                        <div><strong>${item.productName}</strong></div>
+                        <div>${item.quantity} × ${item.price.toLocaleString()}₫</div>
+                        ${item.note ? `<div><small>${item.note}</small></div>` : ''}
+                    </div>
+                    <div>
+                        <strong>${item.total.toLocaleString()}₫</strong>
+                        <button onclick="removeFromCart(${i})" style="background:none;border:none;color:red;cursor:pointer;margin-left:10px;">×</button>
+                    </div>
+                `;
+                cartItems.appendChild(div);
+            });
+            confirmBtn.disabled = false;
+            cartTotal.textContent = totalAmount.toLocaleString();
+        }
+        cartCount.textContent = cart.length;
+    }
+
+    function removeFromCart(index) {
+        cart.splice(index, 1);
+        updateCartDisplay();
+        showNotification('Đã xóa sản phẩm khỏi giỏ hàng');
+    }
+
+    function clearCart() {
+        if (cart.length === 0) {
+            showNotification('Giỏ hàng trống!', 'error');
+            return;
+        }
+        cart = [];
+        updateCartDisplay();
+        showNotification('Đã xóa toàn bộ giỏ hàng');
+    }
+
+    async function confirmSale() {
+        if (cart.length === 0) {
+            showNotification('Giỏ hàng trống!', 'error');
+            return;
+        }
+        const totalAmount = cart.reduce((sum, item) => sum + item.total, 0);
+        showNotification(`Đang xử lý bán ${cart.length} sản phẩm...`, 'info');
+        const sale = {
+            id: Date.now(),
+            timestamp: new Date().toLocaleString('vi-VN'),
+            items: [...cart],
+            totalAmount
+        };
+        salesHistory.push(sale);
+        cart.forEach(item => {
+            const product = products.find(p => p.id === item.productId);
+            if (product) {
+                product.stock -= item.quantity;
+                product.sold += item.quantity;
             }
+        });
+        cart = [];
+        updateCartDisplay();
+        const success = await saveDataToFirebase();
+        if (success) {
+            updateDashboardTotals();
+            updateOverview();
+            updateProductGridStock();
+            showNotification(`✅ Bán hàng thành công! Tổng: ${totalAmount.toLocaleString()}₫`, 'success');
+            setTimeout(() => showMenu('lich-su-ban'), 1000);
+        }
+    }
 
-            function updatePriceHistory() {
-                const historyList = document.getElementById('price-history-list');
-                historyList.innerHTML = '';
-                if (priceHistory.length === 0) {
-                    historyList.innerHTML = '<p style="text-align:center;color:#999;">Chưa có lịch sử thay đổi giá</p>';
-                    return;
-                }
-                priceHistory.slice().reverse().forEach(history => {
-                    const div = document.createElement('div');
-                    div.className = 'history-item';
-                    div.innerHTML = `
-                        <div><strong>${history.timestamp}</strong></div>
-                        <div>${history.product}: ${history.oldPrice.toLocaleString()}₫ → ${history.newPrice.toLocaleString()}₫</div>
-                    `;
-                    historyList.appendChild(div);
-                });
-            }
+    // --- GIÁ BÁN ---
+    function initPriceManagement() {
+        const tableBody = document.querySelector('#price-table tbody');
+        tableBody.innerHTML = '';
+        const sizes = [2,3,4,5,6,7,8,10];
+        sizes.forEach(size => {
+            const row = document.createElement('tr');
+            const nam = products.find(p => p.type==='nam' && p.size===size);
+            const nu = products.find(p => p.type==='nu' && p.size===size);
+            const td = products.find(p => p.type==='the_duc' && p.size===size);
+            row.innerHTML = `
+                <td><strong>${size}</strong></td>
+                <td><input type="number" class="price-input" value="${nam.price}" data-product="${nam.id}"></td>
+                <td><input type="number" class="price-input" value="${nu.price}" data-product="${nu.id}"></td>
+                <td><input type="number" class="price-input" value="${td.price}" data-product="${td.id}"></td>
+            `;
+            tableBody.appendChild(row);
+        });
+        updatePriceHistory();
+    }
 
-            // --- NHẬP HÀNG ---
-            function initImportForm() {
-                const importGrid = document.getElementById('import-grid');
-                importGrid.innerHTML = '';
-                products.forEach(product => {
-                    const item = document.createElement('div');
-                    item.className = 'import-item';
-                    item.innerHTML = `
-                        <div><strong>${product.name}</strong></div>
-                        <input type="number" class="import-input" data-product="${product.id}" placeholder="0" min="0">
-                    `;
-                    importGrid.appendChild(item);
-                });
-            }
-
-            async function confirmImport() {
-                const inputs = document.querySelectorAll('.import-input');
-                let importData = [];
-                let totalQuantity = 0;
-                inputs.forEach(input => {
-                    const quantity = parseInt(input.value) || 0;
-                    if (quantity > 0) {
-                        const productId = parseInt(input.dataset.product);
-                        const product = products.find(p => p.id === productId);
-                        importData.push(`${product.name}: ${quantity}`);
-                        totalQuantity += quantity;
-                        product.stock += quantity;
-                        product.imported += quantity;
-                    }
-                });
-                if (importData.length === 0) {
-                    showNotification('Vui lòng nhập số lượng ít nhất một sản phẩm!', 'error');
-                    return;
-                }
-                importHistory.push({
-                    products: importData,
-                    total: totalQuantity,
+    async function saveAllPrices() {
+        const inputs = document.querySelectorAll('.price-input');
+        let hasChange = false;
+        inputs.forEach(input => {
+            const productId = parseInt(input.dataset.product);
+            const newPrice = parseInt(input.value);
+            const product = products.find(p => p.id === productId);
+            if (product && newPrice !== product.price) {
+                priceHistory.push({
+                    product: product.name,
+                    oldPrice: product.price,
+                    newPrice,
                     timestamp: new Date().toLocaleString('vi-VN')
                 });
-                inputs.forEach(input => input.value = '');
-                const success = await saveDataToFirebase();
-                if (success) {
-                    updateDashboardTotals();
-                    updateOverview();
-                    showNotification(`Nhập hàng thành công! Tổng: ${totalQuantity} sản phẩm`);
-                    setTimeout(() => showMenu('lich-su-nhap'), 1000);
-                }
+                product.price = newPrice;
+                hasChange = true;
             }
+        });
+        if (hasChange) {
+            await saveDataToFirebase();
+            showNotification('Đã cập nhật giá thành công!');
+            updatePriceHistory();
+            updateDashboardTotals();
+            updateOverview();
+        } else {
+            showNotification('Không có thay đổi nào để lưu!', 'info');
+        }
+    }
 
-            // --- TỒN KHO ---
-            function initInventoryTable() {
-                const tableBody = document.querySelector('#inventory-table tbody');
-                tableBody.innerHTML = '';
-                products.forEach(product => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td><strong>${product.name}</strong></td>
-                        <td>${product.imported}</td>
-                        <td>${product.sold}</td>
-                        <td><strong>${product.stock}</strong></td>
-                    `;
-                    tableBody.appendChild(row);
-                });
+    function updatePriceHistory() {
+        const historyList = document.getElementById('price-history-list');
+        historyList.innerHTML = '';
+        if (priceHistory.length === 0) {
+            historyList.innerHTML = '<p style="text-align:center;color:#999;">Chưa có lịch sử thay đổi giá</p>';
+            return;
+        }
+        priceHistory.slice().reverse().forEach(history => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `
+                <div><strong>${history.timestamp}</strong></div>
+                <div>${history.product}: ${history.oldPrice.toLocaleString()}₫ → ${history.newPrice.toLocaleString()}₫</div>
+            `;
+            historyList.appendChild(div);
+        });
+    }
+
+    // --- NHẬP HÀNG ---
+    function initImportForm() {
+        const importGrid = document.getElementById('import-grid');
+        importGrid.innerHTML = '';
+        products.forEach(product => {
+            const item = document.createElement('div');
+            item.className = 'import-item';
+            item.innerHTML = `
+                <div><strong>${product.name}</strong></div>
+                <input type="number" class="import-input" data-product="${product.id}" placeholder="0" min="0">
+            `;
+            importGrid.appendChild(item);
+        });
+    }
+
+    async function confirmImport() {
+        const inputs = document.querySelectorAll('.import-input');
+        let importData = [];
+        let totalQuantity = 0;
+        inputs.forEach(input => {
+            const quantity = parseInt(input.value) || 0;
+            if (quantity > 0) {
+                const productId = parseInt(input.dataset.product);
+                const product = products.find(p => p.id === productId);
+                importData.push(`${product.name}: ${quantity}`);
+                totalQuantity += quantity;
+                product.stock += quantity;
+                product.imported += quantity;
             }
+        });
+        if (importData.length === 0) {
+            showNotification('Vui lòng nhập số lượng ít nhất một sản phẩm!', 'error');
+            return;
+        }
+        importHistory.push({
+            products: importData,
+            total: totalQuantity,
+            timestamp: new Date().toLocaleString('vi-VN')
+        });
+        inputs.forEach(input => input.value = '');
+        const success = await saveDataToFirebase();
+        if (success) {
+            updateDashboardTotals();
+            updateOverview();
+            showNotification(`Nhập hàng thành công! Tổng: ${totalQuantity} sản phẩm`);
+            setTimeout(() => showMenu('lich-su-nhap'), 1000);
+        }
+    }
 
-            // --- LỊCH SỬ NHẬP ---
-            function initImportHistory() {
-                const historyContainer = document.getElementById('import-history');
-                historyContainer.innerHTML = '';
-                if (importHistory.length === 0) {
-                    historyContainer.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">Chưa có lịch sử nhập hàng</p>';
-                    return;
-                }
-                const table = document.createElement('table');
-                table.className = 'data-table';
-                table.innerHTML = `
-                    <thead>
-                        <tr><th>Thời gian</th><th>Sản phẩm</th><th>Số lượng</th></tr>
-                    </thead><tbody></tbody>
+    // --- TỒN KHO ---
+    function initInventoryTable() {
+        const tableBody = document.querySelector('#inventory-table tbody');
+        tableBody.innerHTML = '';
+        products.forEach(product => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><strong>${product.name}</strong></td>
+                <td>${product.imported}</td>
+                <td>${product.sold}</td>
+                <td><strong>${product.stock}</strong></td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    // --- LỊCH SỬ NHẬP ---
+    function initImportHistory() {
+        const historyContainer = document.getElementById('import-history');
+        historyContainer.innerHTML = '';
+        if (importHistory.length === 0) {
+            historyContainer.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">Chưa có lịch sử nhập hàng</p>';
+            return;
+        }
+        const table = document.createElement('table');
+        table.className = 'data-table';
+        table.innerHTML = `
+            <thead>
+                <tr><th>Thời gian</th><th>Sản phẩm</th><th>Số lượng</th></tr>
+            </thead><tbody></tbody>
+        `;
+        const tbody = table.querySelector('tbody');
+        importHistory.slice().reverse().forEach(importItem => {
+            importItem.products.forEach((product, i) => {
+                const [name, quantity] = product.split(':');
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${i === 0 ? importItem.timestamp : ''}</td>
+                    <td>${name.trim()}</td>
+                    <td>${quantity.trim()}</td>
                 `;
-                const tbody = table.querySelector('tbody');
-                importHistory.slice().reverse().forEach(importItem => {
-                    importItem.products.forEach((product, i) => {
-                        const [name, quantity] = product.split(':');
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${i === 0 ? importItem.timestamp : ''}</td>
-                            <td>${name.trim()}</td>
-                            <td>${quantity.trim()}</td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                });
-                historyContainer.appendChild(table);
-            }
-
-            // --- LỊCH SỬ BÁN ---
-            function initSalesHistory() {
-                const historyContainer = document.getElementById('sales-history');
-                historyContainer.innerHTML = '';
-                if (salesHistory.length === 0) {
-                    historyContainer.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">Chưa có lịch sử bán hàng</p>';
-                    return;
-                }
-                const table = document.createElement('table');
-                table.className = 'data-table';
-                table.innerHTML = `
-                    <thead>
-                        <tr>
-                            <th>Thời gian</th><th>Sản phẩm</th><th>Giá bán</th>
-                            <th>Số lượng</th><th>Thành tiền</th><th>Ghi chú</th><th>Tổng đơn hàng</th>
-                        </tr>
-                    </thead><tbody></tbody>
-                `;
-                const tbody = table.querySelector('tbody');
-                salesHistory.slice().reverse().forEach(sale => {
-                    sale.items.forEach((item, i) => {
-                        const tr = document.createElement('tr');
-                        const totalCell = i === 0 ?
-                            `<td rowspan="${sale.items.length}" style="vertical-align: middle; background: #f8f9fa;">
-                                <strong>${sale.totalAmount.toLocaleString()}₫</strong>
-                            </td>` : '<td></td>';
-                        tr.innerHTML = `
-                            <td>${i === 0 ? sale.timestamp : ''}</td>
-                            <td>${item.productName}</td>
-                            <td>${item.price.toLocaleString()}₫</td>
-                            <td>${item.quantity}</td>
-                            <td>${item.total.toLocaleString()}₫</td>
-                            <td>${item.note || ''}</td>
-                            ${totalCell}
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                });
-                historyContainer.appendChild(table);
-            }
-
-            // --- DASHBOARD ---
-            function updateDashboardTotals() {
-                // Tính tổng tồn kho theo đúng giá
-                const totalUniform = products.filter(p => p.type === 'nam' || p.type === 'nu')
-                                            .reduce((sum, p) => sum + p.stock, 0);
-                const totalPE = products.filter(p => p.type === 'the_duc')
-                                        .reduce((sum, p) => sum + p.stock, 0);
-                const totalInventoryValue = (totalUniform * 90000) + (totalPE * 55000);
-
-                // Tính tổng giá trị bán
-                const totalSalesValue = salesHistory.reduce((sum, sale) => sum + sale.totalAmount, 0);
-
-                document.getElementById('total-inventory-value').textContent = totalInventoryValue.toLocaleString() + '₫';
-                document.getElementById('total-sales-value').textContent = totalSalesValue.toLocaleString() + '₫';
-            }
-
-            function updateProductGridStock() {
-                document.querySelectorAll('.product-item').forEach(item => {
-                    const name = item.querySelector('div:first-child')?.textContent.trim();
-                    const prod = products.find(p => p.name === name);
-                    if (prod) {
-                        const stockElem = item.querySelector('.product-stock');
-                        if (stockElem) stockElem.textContent = `Tồn: ${prod.stock}`;
-                    }
-                });
-            }
-
-            // --- XÓA TẤT CẢ ---
-            async function xoaTatCaTonKho() {
-                products.forEach(product => { product.stock = 0; product.imported = 0; product.sold = 0; });
-                await saveDataToFirebase();
-                initInventoryTable();
-                updateDashboardTotals();
-                updateOverview();
-                updateProductGridStock();
-                showNotification('Đã xóa tất cả dữ liệu tồn kho!');
-            }
-
-            async function xoaTatCaLichSuNhap() {
-                importHistory = [];
-                await saveDataToFirebase();
-                initImportHistory();
-                updateDashboardTotals();
-                updateOverview();
-                showNotification('Đã xóa tất cả lịch sử nhập hàng!');
-            }
-
-            async function xoaTatCaLichSuBan() {
-                salesHistory = [];
-                await saveDataToFirebase();
-                initSalesHistory();
-                updateDashboardTotals();
-                updateOverview();
-                showNotification('Đã xóa tất cả lịch sử bán hàng!');
-            }
-
-            // --- THÔNG BÁO ---
-            function showNotification(message, type = 'success') {
-                let notification = document.getElementById('notification');
-                if (!notification) {
-                    notification = document.createElement('div');
-                    notification.id = 'notification';
-                    document.body.appendChild(notification);
-                }
-                notification.textContent = message;
-                notification.className = `notification ${type} show`;
-                setTimeout(() => notification.classList.remove('show'), 3000);
-            }
-
-            // --- ĐÓNG MODAL KHI CLICK RA NGOÀI ---
-            window.onclick = function(event) {
-                if (event.target === document.getElementById('sale-modal')) closeModal();
-            }
-            document.addEventListener('keydown', function(event) {
-                if (event.key === 'Escape') closeModal();
+                tbody.appendChild(tr);
             });
+        });
+        historyContainer.appendChild(table);
+    }
+
+    // --- LỊCH SỬ BÁN (SỬA CHO ĐÚNG Ô TỔNG ĐƠN HÀNG KHÔNG DƯ) ---
+    function initSalesHistory() {
+        const historyContainer = document.getElementById('sales-history');
+        historyContainer.innerHTML = '';
+        if (salesHistory.length === 0) {
+            historyContainer.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">Chưa có lịch sử bán hàng</p>';
+            return;
+        }
+        const table = document.createElement('table');
+        table.className = 'data-table';
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Thời gian</th><th>Sản phẩm</th><th>Giá bán</th>
+                    <th>Số lượng</th><th>Thành tiền</th><th>Ghi chú</th><th>Tổng đơn hàng</th>
+                </tr>
+            </thead><tbody></tbody>
+        `;
+        const tbody = table.querySelector('tbody');
+        salesHistory.slice().reverse().forEach(sale => {
+            sale.items.forEach((item, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${i === 0 ? sale.timestamp : ''}</td>
+                    <td>${item.productName}</td>
+                    <td>${item.price.toLocaleString()}₫</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.total.toLocaleString()}₫</td>
+                    <td>${item.note || ''}</td>
+                    ${i === 0
+                        ? `<td rowspan="${sale.items.length}" style="vertical-align: middle; background: #f8f9fa;">
+                                <strong>${sale.totalAmount.toLocaleString()}₫</strong>
+                           </td>`
+                        : ''}
+                `;
+                tbody.appendChild(tr);
+            });
+        });
+        historyContainer.appendChild(table);
+    }
+
+    // --- DASHBOARD ---
+    function updateDashboardTotals() {
+        const totalUniform = products.filter(p => p.type === 'nam' || p.type === 'nu')
+                                    .reduce((sum, p) => sum + p.stock, 0);
+        const totalPE = products.filter(p => p.type === 'the_duc')
+                                .reduce((sum, p) => sum + p.stock, 0);
+        const totalInventoryValue = (totalUniform * 90000) + (totalPE * 55000);
+
+        const totalSalesValue = salesHistory.reduce((sum, sale) => sum + sale.totalAmount, 0);
+
+        document.getElementById('total-inventory-value').textContent = totalInventoryValue.toLocaleString() + '₫';
+        document.getElementById('total-sales-value').textContent = totalSalesValue.toLocaleString() + '₫';
+    }
+
+    function updateProductGridStock() {
+        document.querySelectorAll('.product-item').forEach(item => {
+            const name = item.querySelector('div:first-child')?.textContent.trim();
+            const prod = products.find(p => p.name === name);
+            if (prod) {
+                const stockElem = item.querySelector('.product-stock');
+                if (stockElem) stockElem.textContent = `Tồn: ${prod.stock}`;
+            }
+        });
+    }
+
+    // --- XÓA TẤT CẢ ---
+    async function xoaTatCaTonKho() {
+        products.forEach(product => { product.stock = 0; product.imported = 0; product.sold = 0; });
+        await saveDataToFirebase();
+        initInventoryTable();
+        updateDashboardTotals();
+        updateOverview();
+        updateProductGridStock();
+        showNotification('Đã xóa tất cả dữ liệu tồn kho!');
+    }
+
+    async function xoaTatCaLichSuNhap() {
+        importHistory = [];
+        await saveDataToFirebase();
+        initImportHistory();
+        updateDashboardTotals();
+        updateOverview();
+        showNotification('Đã xóa tất cả lịch sử nhập hàng!');
+    }
+
+    async function xoaTatCaLichSuBan() {
+        salesHistory = [];
+        await saveDataToFirebase();
+        initSalesHistory();
+        updateDashboardTotals();
+        updateOverview();
+        showNotification('Đã xóa tất cả lịch sử bán hàng!');
+    }
+
+    // --- THÔNG BÁO ---
+    function showNotification(message, type = 'success') {
+        let notification = document.getElementById('notification');
+        if (!notification) {
+            notification = document.createElement('div');
+            notification.id = 'notification';
+            document.body.appendChild(notification);
+        }
+        notification.textContent = message;
+        notification.className = `notification ${type} show`;
+        setTimeout(() => notification.classList.remove('show'), 3000);
+    }
+
+    // --- ĐÓNG MODAL KHI CLICK RA NGOÀI ---
+    window.onclick = function(event) {
+        if (event.target === document.getElementById('sale-modal')) closeModal();
+    }
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') closeModal();
+    });
 </script>
 </body>
 </html>
