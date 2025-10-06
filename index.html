@@ -694,6 +694,26 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Tô màu đỏ cho tồn kho = 0 */
+        .zero-stock {
+            color: #e74c3c !important;
+            font-weight: bold;
+            background: #fff0f0 !important;
+        }
+        /* Màu nền cho các dòng tồn kho giống bán hàng */
+        .inventory-row-nam td {
+            background: rgba(59, 130, 246, 0.05);
+            color: #3b82f6;
+        }
+        .inventory-row-nu td {
+            background: rgba(244, 114, 182, 0.05);
+            color: #f472b6;
+        }
+        .inventory-row-the_duc td {
+            background: rgba(251, 191, 36, 0.1);
+            color: #d97706;
+        }
     </style>
 </head>
 <body>
@@ -1297,18 +1317,23 @@
     }
 
     // --- TỒN KHO ---
-    function initInventoryTable() {
+        function initInventoryTable() {
         const tableBody = document.querySelector('#inventory-table tbody');
         tableBody.innerHTML = '';
         products.forEach(product => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
+            const tr = document.createElement('tr');
+            // Thêm class cho dòng theo loại sản phẩm
+            tr.className = 'inventory-row-' + product.type;
+
+            tr.innerHTML = `
                 <td><strong>${product.name}</strong></td>
                 <td>${product.imported}</td>
                 <td>${product.sold}</td>
-                <td><strong>${product.stock}</strong></td>
+                <td>
+                    <strong class="${product.stock === 0 ? 'zero-stock' : ''}">${product.stock}</strong>
+                </td>
             `;
-            tableBody.appendChild(row);
+            tableBody.appendChild(tr);
         });
     }
 
